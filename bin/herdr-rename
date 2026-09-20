@@ -1,0 +1,37 @@
+#!/bin/zsh
+# Interactive agent rename, meant to run as a herdr popup (prefix+shift+a).
+set -e
+json=$(herdr agent list)
+lines=("${(@f)$(print -r -- "$json" | python3 -c '
+import json,sys
+for i,a in enumerate(json.load(sys.stdin)["result"]["agents"],1):
+    name=a.get("name") or a["terminal_title_stripped"]
+    focus="*" if a.get("focused") else " "
+    print("\t".join([str(i), a["pane_id"], focus, a["agent"], name]))
+')}")
+
+default=1
+for l in "${lines[@]}"; do
+  parts=("${(@s:	:)l}")
+  [[ "${parts[3]}" == "*" ]] && default="${parts[1]}"
+  printf "%2s %s %-6s %s\n" "${parts[1]}" "${parts[3]}" "${parts[4]}" "${parts[5]}"
+done
+
+echo
+printf "Agent number [%s]: " "$default"; read -r n
+n="${n:-$default}"
+parts=("${(@s:	:)lines[$n]}")
+pane="${parts[2]}"
+[ -z "$pane" ] && { echo "no such agent"; sleep 1; exit 1 }
+
+printf "New name for %s (lowercase, digits, - or _; blank to clear): " "${parts[5]}"; read -r name
+if [ -z "$name" ]; then
+  herdr agent rename "$pane" --clear >/dev/null && echo "cleared"
+else
+  out=$(herdr agent rename "$pane" "$name")
+  if print -r -- "$out" | grep -q '"error"'; then
+    print -r -- "$out" | grep -o '"message":"[^"]*"'; sleep 2; exit 1
+  fi
+  echo "renamed -> $name"
+fi
+sleep 0.6
