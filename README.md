@@ -1,6 +1,6 @@
 # herdr-rename
 
-Rename agents in [herdr](https://herdr.dev) from the keyboard.
+Rename agents in [herdr](https://herdr.dev) from the keyboard. Sets the pane label to match, so the name shows on pane borders too.
 
 herdr's sidebar shows each agent's own terminal title (whatever Claude Code, Codex and friends set), and renaming the pane doesn't change it. The `herdr agent rename` CLI command does, but there's no keybinding for it. This adds one, plus a shell helper.
 

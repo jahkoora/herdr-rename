@@ -26,12 +26,13 @@ pane="${parts[2]}"
 
 printf "New name for %s (lowercase, digits, - or _; blank to clear): " "${parts[5]}"; read -r name
 if [ -z "$name" ]; then
-  herdr agent rename "$pane" --clear >/dev/null && echo "cleared"
+  herdr agent rename "$pane" --clear >/dev/null && herdr pane rename "$pane" >/dev/null 2>&1; echo "cleared"
 else
-  out=$(herdr agent rename "$pane" "$name")
+  out=$(herdr agent rename "$pane" "$name" 2>&1)
   if print -r -- "$out" | grep -q '"error"'; then
     print -r -- "$out" | grep -o '"message":"[^"]*"'; sleep 2; exit 1
   fi
+  herdr pane rename "$pane" "$name" >/dev/null 2>&1
   echo "renamed -> $name"
 fi
 sleep 0.6
